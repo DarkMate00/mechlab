@@ -1,13 +1,17 @@
 import { Suspense, useRef, type MouseEvent } from 'react'
 import { Outlet } from 'react-router'
 import { useNavigationReset } from '../../hooks/useNavigationReset'
+import { CustomCursor } from '../animations/CustomCursor'
+import { PageTransition } from '../animations/PageTransition'
+import { ScrollProgress } from '../animations/ScrollProgress'
 import { Navbar } from '../navigation/Navbar'
 import { LoadingScreen } from '../ui/LoadingScreen'
+import { TechnicalGrid } from '../visuals/TechnicalGrid'
 import { Footer } from './Footer'
 
 const MAIN_CONTENT_ID = 'main-content'
 
-/** Shared page frame: skip link, navigation, main content area, footer. */
+/** Shared page frame: background, skip link, navigation, main content area, footer. */
 export function RootLayout() {
   const mainRef = useRef<HTMLElement>(null)
   useNavigationReset(mainRef)
@@ -20,18 +24,23 @@ export function RootLayout() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="relative isolate flex min-h-dvh flex-col">
+      <TechnicalGrid className="fixed inset-0 -z-10" fade="top" />
+      <ScrollProgress />
+      <CustomCursor />
       <a
         href={`#${MAIN_CONTENT_ID}`}
         onClick={handleSkipLink}
-        className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded-md focus:bg-white focus:px-3 focus:py-2"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[110] focus:rounded-xs focus:bg-surface-raised focus:px-4 focus:py-3 focus:text-sm focus:text-fg"
       >
         Skip to main content
       </a>
       <Navbar />
       <main id={MAIN_CONTENT_ID} ref={mainRef} tabIndex={-1} className="flex-1 focus:outline-none">
         <Suspense fallback={<LoadingScreen />}>
-          <Outlet />
+          <PageTransition>
+            <Outlet />
+          </PageTransition>
         </Suspense>
       </main>
       <Footer />

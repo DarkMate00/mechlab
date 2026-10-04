@@ -1,27 +1,73 @@
-import type { ButtonHTMLAttributes } from 'react'
-import { classNames } from '../../lib/utilities/classNames'
+import type { ButtonHTMLAttributes, ReactNode } from 'react'
+import { Link, type LinkProps } from 'react-router'
+import { Magnetic } from '../animations/Magnetic'
+import { ArrowIcon } from './ArrowIcon'
+import { buttonClasses, type ButtonSize, type ButtonVariant } from './buttonStyles'
 
-type ButtonVariant = 'primary' | 'secondary'
-
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+interface SharedButtonProps {
   variant?: ButtonVariant
+  size?: ButtonSize
+  /** Adds a trailing arrow that moves on hover. */
+  withArrow?: boolean
+  /** Nudges the button toward the pointer. Use on at most one call to action per view. */
+  magnetic?: boolean
 }
 
-const VARIANT_CLASSES: Record<ButtonVariant, string> = {
-  primary: 'bg-slate-900 text-white hover:bg-slate-700',
-  secondary: 'border border-slate-300 text-slate-900 hover:bg-slate-100',
-}
-
-export function Button({ variant = 'primary', type = 'button', className, ...props }: ButtonProps) {
+function ButtonContent({ children, withArrow }: { children: ReactNode; withArrow?: boolean }) {
   return (
-    <button
-      type={type}
-      className={classNames(
-        'rounded-md px-4 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 disabled:cursor-not-allowed disabled:opacity-50',
-        VARIANT_CLASSES[variant],
-        className,
-      )}
-      {...props}
-    />
+    <>
+      {children}
+      {withArrow ? <ArrowIcon /> : null}
+    </>
+  )
+}
+
+function MaybeMagnetic({ magnetic, children }: { magnetic?: boolean; children: ReactNode }) {
+  return magnetic ? <Magnetic>{children}</Magnetic> : children
+}
+
+type ButtonProps = SharedButtonProps & ButtonHTMLAttributes<HTMLButtonElement>
+
+export function Button({
+  variant = 'primary',
+  size = 'md',
+  withArrow,
+  magnetic,
+  type = 'button',
+  className,
+  children,
+  ...props
+}: ButtonProps) {
+  return (
+    <MaybeMagnetic magnetic={magnetic}>
+      <button type={type} className={buttonClasses(variant, size, className)} {...props}>
+        <ButtonContent withArrow={withArrow}>{children}</ButtonContent>
+      </button>
+    </MaybeMagnetic>
+  )
+}
+
+type ButtonLinkProps = SharedButtonProps & LinkProps
+
+/** A router link that looks like a button. Use for navigation; use Button for actions. */
+export function ButtonLink({
+  variant = 'primary',
+  size = 'md',
+  withArrow,
+  magnetic,
+  className,
+  children,
+  ...props
+}: ButtonLinkProps) {
+  return (
+    <MaybeMagnetic magnetic={magnetic}>
+      <Link
+        data-cursor="button"
+        className={buttonClasses(variant, size, className)}
+        {...props}
+      >
+        <ButtonContent withArrow={withArrow}>{children}</ButtonContent>
+      </Link>
+    </MaybeMagnetic>
   )
 }

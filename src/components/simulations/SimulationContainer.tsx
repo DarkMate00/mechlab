@@ -1,5 +1,7 @@
 import { useId, type ReactNode } from 'react'
 import { Card } from '../ui/Card'
+import { TechnicalLabel } from '../ui/TechnicalLabel'
+import { TechnicalGrid } from '../visuals/TechnicalGrid'
 
 interface SimulationContainerProps {
   title: string
@@ -21,12 +23,22 @@ export function SimulationContainer({
 
   return (
     <Card as="section" aria-labelledby={headingId}>
-      <h2 id={headingId} className="text-xl font-semibold">
+      <TechnicalLabel tone="accent" marker>
+        Simulation
+      </TechnicalLabel>
+      <h2 id={headingId} className="mt-4 text-h3">
         {title}
       </h2>
-      {description ? <p className="mt-1 text-slate-600">{description}</p> : null}
-      <div className="mt-4">{children}</div>
-      {controls ? <div className="mt-4">{controls}</div> : null}
+      {description ? <p className="mt-2 text-fg-muted">{description}</p> : null}
+      {/* data-cursor switches the custom cursor to its crosshair "simulation" state. */}
+      <div
+        data-cursor="simulation"
+        className="surface-raised relative mt-6 overflow-hidden rounded-sm"
+      >
+        <TechnicalGrid className="absolute inset-0" fade="center" />
+        <div className="relative">{children}</div>
+      </div>
+      {controls ? <div className="mt-6">{controls}</div> : null}
     </Card>
   )
 }

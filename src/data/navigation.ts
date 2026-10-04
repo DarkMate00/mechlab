@@ -40,3 +40,8 @@ export const SECTIONS = {
 } satisfies Record<string, NavItem>
 
 export const NAV_ITEMS: readonly NavItem[] = Object.values(SECTIONS)
+
+/** Routes that exist but must never appear in the navigation. */
+export const INTERNAL_ROUTES = {
+  designSystem: '/design-system',
+} as const

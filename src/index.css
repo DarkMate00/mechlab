@@ -1,7 +1,284 @@
 @import 'tailwindcss';
 
+/* ==========================================================================
+   MECHLAB design tokens
+   Everything visual (colour, type, radius, motion) is defined here once.
+   The default Tailwind palette is removed on purpose so only system colours exist.
+   ========================================================================== */
+@theme {
+  /* Colour: surfaces (darkest to lightest) */
+  --color-*: initial;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+  --color-canvas: #070809;
+  --color-surface: #0b0d10;
+  --color-surface-raised: #101216;
+  --color-surface-hover: #15181d;
+
+  /* Colour: text */
+  --color-fg: #eceff3;
+  --color-fg-muted: #9aa4b0;
+  --color-fg-subtle: #7a838f;
+
+  /* Colour: hairlines */
+  --color-line: rgb(255 255 255 / 0.08);
+  --color-line-strong: rgb(255 255 255 / 0.16);
+
+  /* Colour: the single accent, plus two state colours used only for status */
+  --color-accent: #52b4f0;
+  --color-accent-strong: #7cc8f7;
+  --color-accent-fg: #04121c;
+  --color-warn: #dda24a;
+  --color-danger: #e2675e;
+
+  /* Typography: families (self-hosted via @fontsource, imported in main.tsx) */
+  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  /* Typography: scale. Fluid sizes use clamp() so they need no breakpoints. */
+  --text-display: clamp(2.75rem, 1.5rem + 5.2vw, 5.75rem);
+  --text-display--line-height: 1.02;
+  --text-display--letter-spacing: -0.04em;
+  --text-display--font-weight: 600;
+  --text-h1: clamp(2.125rem, 1.4rem + 3vw, 3.5rem);
+  --text-h1--line-height: 1.08;
+  --text-h1--letter-spacing: -0.03em;
+  --text-h1--font-weight: 600;
+  --text-h2: clamp(1.625rem, 1.2rem + 1.6vw, 2.375rem);
+  --text-h2--line-height: 1.15;
+  --text-h2--letter-spacing: -0.02em;
+  --text-h2--font-weight: 600;
+  --text-h3: 1.1875rem;
+  --text-h3--line-height: 1.35;
+  --text-h3--letter-spacing: -0.01em;
+  --text-h3--font-weight: 600;
+  --text-body-lg: 1.1875rem;
+  --text-body-lg--line-height: 1.65;
+  --text-body: 1rem;
+  --text-body--line-height: 1.65;
+  --text-caption: 0.8125rem;
+  --text-caption--line-height: 1.5;
+  --text-label: 0.6875rem;
+  --text-label--line-height: 1.2;
+  --text-data: 1.75rem;
+  --text-data--line-height: 1.1;
+  --text-data--letter-spacing: -0.02em;
+  --tracking-label: 0.14em;
+
+  /* Shape: small radii only; cards and buttons are precise, not pill-shaped */
+  --radius-*: initial;
+  --radius-none: 0;
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-full: 9999px;
+
+  /* Depth: borders do the work; the only shadow is a 1px top highlight */
+  --shadow-*: initial;
+  --shadow-inset-highlight: inset 0 1px 0 rgb(255 255 255 / 0.04);
+
+  /* Layout */
+  --container-content: 72rem;
+  --container-reading: 40rem;
+  --spacing-section: clamp(4rem, 2.5rem + 6vw, 8rem);
+
+  /* Motion (mirrored in src/lib/motion.ts for Motion-driven animation) */
+  --ease-precise: cubic-bezier(0.22, 1, 0.36, 1);
+  --animate-status-pulse: status-pulse 2.4s ease-in-out infinite;
+  --animate-grid-drift: grid-drift 120s linear infinite;
+
+  @keyframes status-pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.35;
+    }
+  }
+
+  /* The grid layer is 6rem larger than its box; sliding it by one major cell loops seamlessly. */
+  @keyframes grid-drift {
+    to {
+      transform: translate3d(6rem, 6rem, 0);
+    }
+  }
+}
+
+/* ==========================================================================
+   Base
+   ========================================================================== */
 @layer base {
+  html {
+    color-scheme: dark;
+    background-color: var(--color-canvas);
+    scrollbar-width: thin;
+    scrollbar-color: rgb(255 255 255 / 0.18) transparent;
+    -webkit-text-size-adjust: 100%;
+  }
+
   body {
-    @apply bg-white text-slate-900 antialiased;
+    @apply bg-canvas font-sans text-body text-fg antialiased;
+    text-rendering: optimizeLegibility;
+    /* Safety net so decorative layers can never create sideways scrolling. */
+    overflow-x: clip;
+  }
+
+  ::selection {
+    background-color: color-mix(in oklab, var(--color-accent) 35%, transparent);
+    color: var(--color-fg);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* WebKit scrollbars (Chrome, Safari, Edge) */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: rgb(255 255 255 / 0.16);
+    border-radius: 9999px;
+    border: 3px solid var(--color-canvas);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: rgb(255 255 255 / 0.28);
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+/* ==========================================================================
+   Custom cursor: the native pointer is hidden ONLY when the custom cursor is
+   running (JS sets data-custom-cursor on <html> after the first mouse movement), only
+   for fine pointers, and never in forced-colors mode. Text fields keep the
+   native caret/pointer.
+   ========================================================================== */
+@media (pointer: fine) and (hover: hover) and (not (forced-colors: active)) {
+  html[data-custom-cursor],
+  html[data-custom-cursor] * {
+    cursor: none;
+  }
+  html[data-custom-cursor]
+    :is(input, textarea, select, [contenteditable]:not([contenteditable='false'])) {
+    cursor: auto;
+  }
+}
+
+/* ==========================================================================
+   Reduced motion: no looping or decorative animation, instant transitions.
+   Motion-driven animation (reveals, parallax, cursor) checks the same setting in JS.
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ==========================================================================
+   Utilities
+   ========================================================================== */
+
+/* Surfaces */
+@utility surface {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-line);
+  box-shadow: var(--shadow-inset-highlight);
+}
+
+@utility surface-raised {
+  background-color: var(--color-surface-raised);
+  border: 1px solid var(--color-line-strong);
+  box-shadow: var(--shadow-inset-highlight);
+}
+
+/* Blueprint grid: 96px major lines, 24px minor lines. On small screens only a lighter major grid. */
+@utility bg-technical-grid {
+  --grid-major-color: rgb(255 255 255 / 0.06);
+  --grid-minor-color: rgb(255 255 255 / 0.025);
+  background-image:
+    linear-gradient(to right, var(--grid-major-color) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-major-color) 1px, transparent 1px),
+    linear-gradient(to right, var(--grid-minor-color) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-minor-color) 1px, transparent 1px);
+  background-size:
+    96px 96px,
+    96px 96px,
+    24px 24px,
+    24px 24px;
+
+  @media (max-width: 767px) {
+    --grid-major-color: rgb(255 255 255 / 0.035);
+    --grid-minor-color: transparent;
+    background-size:
+      64px 64px,
+      64px 64px,
+      24px 24px,
+      24px 24px;
+  }
+}
+
+/* Fades a layer out toward its edges so the grid never ends in a hard line. */
+@utility mask-fade-top {
+  mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, #000 30%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, #000 30%, transparent 100%);
+}
+
+@utility mask-fade-center {
+  mask-image: radial-gradient(ellipse 75% 75% at 50% 50%, #000 35%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 75% 75% at 50% 50%, #000 35%, transparent 100%);
+}
+
+/* Drawing-frame corner marks: two accent corners that appear on hover/focus. */
+@utility corner-marks {
+  position: relative;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border: 0 solid var(--color-accent);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 200ms var(--ease-precise);
+  }
+  &::before {
+    top: -1px;
+    left: -1px;
+    border-top-width: 1px;
+    border-left-width: 1px;
+  }
+  &::after {
+    right: -1px;
+    bottom: -1px;
+    border-right-width: 1px;
+    border-bottom-width: 1px;
+  }
+  &:hover::before,
+  &:hover::after,
+  &:focus-within::before,
+  &:focus-within::after {
+    opacity: 1;
   }
 }

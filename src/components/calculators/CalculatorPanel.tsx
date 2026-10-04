@@ -1,5 +1,6 @@
 import { useId, type ReactNode } from 'react'
 import { Card } from '../ui/Card'
+import { TechnicalLabel } from '../ui/TechnicalLabel'
 
 interface CalculatorPanelProps {
   title: string
@@ -16,12 +17,15 @@ export function CalculatorPanel({ title, description, inputs, result }: Calculat
 
   return (
     <Card as="section" aria-labelledby={headingId}>
-      <h2 id={headingId} className="text-xl font-semibold">
+      <TechnicalLabel tone="accent" marker>
+        Calculation
+      </TechnicalLabel>
+      <h2 id={headingId} className="mt-4 text-h3">
         {title}
       </h2>
-      {description ? <p className="mt-1 text-slate-600">{description}</p> : null}
-      <div className="mt-4 space-y-3">{inputs}</div>
-      <div role="status" className="mt-4">
+      {description ? <p className="mt-2 text-fg-muted">{description}</p> : null}
+      <div className="mt-6 space-y-4">{inputs}</div>
+      <div role="status" className="surface-raised mt-6 rounded-sm p-4">
         {result}
       </div>
     </Card>

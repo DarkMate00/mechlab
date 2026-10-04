@@ -1,7 +1,8 @@
 import { lazy } from 'react'
 import { HashRouter, Route, Routes } from 'react-router'
+import { MotionProvider } from './components/animations/MotionProvider'
 import { RootLayout } from './components/layout/RootLayout'
-import { SECTIONS } from './data/navigation'
+import { INTERNAL_ROUTES, SECTIONS } from './data/navigation'
 import HomePage from './pages/HomePage'
 
 // Everything except the home page is code-split so the first load stays small.
@@ -10,6 +11,7 @@ const InteractiveLabPage = lazy(() => import('./pages/InteractiveLabPage'))
 const RealLifePage = lazy(() => import('./pages/RealLifePage'))
 const ProjectsPage = lazy(() => import('./pages/ProjectsPage'))
 const AboutPage = lazy(() => import('./pages/AboutPage'))
+const DesignSystemPage = lazy(() => import('./pages/DesignSystemPage'))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
 
 /**
@@ -19,18 +21,22 @@ const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
  */
 export default function App() {
   return (
-    <HashRouter>
-      <Routes>
-        <Route element={<RootLayout />}>
-          <Route index element={<HomePage />} />
-          <Route path={SECTIONS.fundamentals.path} element={<FundamentalsPage />} />
-          <Route path={SECTIONS.lab.path} element={<InteractiveLabPage />} />
-          <Route path={SECTIONS.realLife.path} element={<RealLifePage />} />
-          <Route path={SECTIONS.projects.path} element={<ProjectsPage />} />
-          <Route path={SECTIONS.about.path} element={<AboutPage />} />
-          <Route path="*" element={<NotFoundPage />} />
-        </Route>
-      </Routes>
-    </HashRouter>
+    <MotionProvider>
+      <HashRouter>
+        <Routes>
+          <Route element={<RootLayout />}>
+            <Route index element={<HomePage />} />
+            <Route path={SECTIONS.fundamentals.path} element={<FundamentalsPage />} />
+            <Route path={SECTIONS.lab.path} element={<InteractiveLabPage />} />
+            <Route path={SECTIONS.realLife.path} element={<RealLifePage />} />
+            <Route path={SECTIONS.projects.path} element={<ProjectsPage />} />
+            <Route path={SECTIONS.about.path} element={<AboutPage />} />
+            {/* Internal design-system playground: routed, but deliberately not in the navigation. */}
+            <Route path={INTERNAL_ROUTES.designSystem} element={<DesignSystemPage />} />
+            <Route path="*" element={<NotFoundPage />} />
+          </Route>
+        </Routes>
+      </HashRouter>
+    </MotionProvider>
   )
 }
