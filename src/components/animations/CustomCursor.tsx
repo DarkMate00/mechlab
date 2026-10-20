@@ -5,7 +5,6 @@ import { FINE_POINTER_QUERY, useMediaQuery } from '../../hooks/useMediaQuery'
 import { resolveCursorVariant, type CursorVariant } from '../../lib/cursor'
 import { classNames } from '../../lib/utilities/classNames'
 
-/** Ring scale per state. The ring is drawn once at 32px and only ever scaled (GPU transform). */
 const RING_SCALE: Record<CursorVariant, number> = {
   default: 1,
   link: 1.35,
@@ -15,7 +14,6 @@ const RING_SCALE: Record<CursorVariant, number> = {
   native: 1,
 }
 
-/** Ring colours per state, using design tokens. Cross-fades via a CSS transition. */
 const RING_CLASSES: Record<CursorVariant, string> = {
   default: 'border-fg/45 bg-transparent',
   link: 'border-fg/80 bg-transparent',
@@ -29,11 +27,6 @@ const RING_SPRING = { stiffness: 320, damping: 30, mass: 0.6 } as const
 const STATE_SPRING = { type: 'spring', stiffness: 320, damping: 26 } as const
 const PRESSED_SCALE = 0.85
 
-/**
- * The MECHLAB cursor: a dot that tracks the pointer exactly and a thin ring that trails it
- * with a spring. The ring changes state over links, buttons, cards and simulations
- * (see lib/cursor.ts for the priority rules). Renders nothing unless the primary pointer is a fine, hover-capable one.
- */
 export function CustomCursor() {
   const hasFinePointer = useMediaQuery(FINE_POINTER_QUERY)
   return hasFinePointer ? <CursorLayer /> : null
@@ -45,12 +38,10 @@ function CursorLayer() {
   const [visible, setVisible] = useState(false)
   const [pressed, setPressed] = useState(false)
 
-  // Pointer position lives in motion values, so moving the mouse never re-renders React.
   const x = useMotionValue(0)
   const y = useMotionValue(0)
   const springX = useSpring(x, RING_SPRING)
   const springY = useSpring(y, RING_SPRING)
-  // Reduced motion: the ring follows the pointer directly, with no trailing.
   const ringX = reduced ? x : springX
   const ringY = reduced ? y : springY
 
@@ -70,36 +61,37 @@ function CursorLayer() {
       y.set(lastY)
       if (!hasMoved) {
         hasMoved = true
-        // Start the ring under the pointer instead of flying in from the corner.
         springX.jump(lastX)
         springY.jump(lastY)
-        // Only now hide the native pointer, so it is never hidden without a replacement showing.
         root.dataset.customCursor = 'on'
         setVisible(true)
       }
     }
+    
     function handleOver(event: PointerEvent) {
-      if (event.pointerType !== 'touch') setVariant(resolveCursorVariant(event.target))
+      if (event.pointerType !== 'touch') setVariant(resolveCursorVariant(event.target as Element))
     }
 
-    // pointerover only fires when the pointer moves onto a new element. When the page moves
-    // under a stationary pointer (scrolling, a route change) the state is re-read from what
-    // is actually under the pointer, so it can never stay stuck on an element that is gone.
     function refreshVariant() {
       refreshFrame = 0
-      if (hasMoved) setVariant(resolveCursorVariant(document.elementFromPoint(lastX, lastY)))
+      if (hasMoved) {
+        const el = document.elementFromPoint(lastX, lastY)
+        if (el) setVariant(resolveCursorVariant(el))
+      }
     }
+    
     function scheduleRefresh() {
       if (!refreshFrame) refreshFrame = requestAnimationFrame(refreshVariant)
     }
+    
     function handleClick() {
-      // After a click the page often changes (navigation, menus); re-check once it has settled.
       timers.push(window.setTimeout(scheduleRefresh, 150), window.setTimeout(scheduleRefresh, 500))
     }
 
     function handleDown(event: PointerEvent) {
       if (event.pointerType !== 'touch') setPressed(true)
     }
+    
     const handleUp = () => setPressed(false)
     const handleLeave = () => setVisible(false)
     const handleEnter = () => setVisible(hasMoved)
@@ -140,6 +132,7 @@ function CursorLayer() {
       data-variant={variant}
       className="pointer-events-none fixed left-0 top-0 z-[100] h-0 w-0 mix-blend-difference"
     >
+      {/* Ring layer */}
       <m.div style={{ x: ringX, y: ringY }} className="absolute left-0 top-0">
         <m.div
           animate={{
@@ -149,22 +142,25 @@ function CursorLayer() {
           transition={transition}
           className={classNames(
             '-ml-4 -mt-4 size-8 rounded-full border transition-[border-color,background-color] duration-200',
-            RING_CLASSES[variant],
+            RING_CLASSES[variant]
           )}
-        >
-          {/* Crosshair inside the ring: the "interactive simulation" state. */}
-          <span
-            className={classNames(
-              'absolute inset-0 transition-opacity duration-200',
-              variant === 'simulation' ? 'opacity-100' : 'opacity-0',
-            )}
-          >
-            <span className="absolute inset-y-1 left-1/2 w-px -translate-x-1/2 bg-accent/70" />
-            <span className="absolute inset-x-1 top-1/2 h-px -translate-y-1/2 bg-accent/70" />
-          </span>
-        </m.div>
+        />
       </m.div>
 
+      {/* Crosshair layer (tracks ring position exactly, but avoids scaling distortion) */}
+      <m.div style={{ x: ringX, y: ringY }} className="absolute left-0 top-0">
+        <span
+          className={classNames(
+            'absolute -ml-4 -mt-4 size-8 transition-opacity duration-200',
+            (variant === 'simulation' || variant === 'card') && shown ? 'opacity-100' : 'opacity-0'
+          )}
+        >
+          <span className="absolute left-1/2 top-1/2 h-[50%] w-px -translate-x-1/2 -translate-y-1/2 bg-accent/70" />
+          <span className="absolute left-1/2 top-1/2 w-[50%] h-px -translate-x-1/2 -translate-y-1/2 bg-accent/70" />
+        </span>
+      </m.div>
+
+      {/* Center Dot layer */}
       <m.div style={{ x, y }} className="absolute left-0 top-0">
         <m.div
           animate={{
